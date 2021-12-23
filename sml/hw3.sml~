@@ -1,0 +1,114 @@
+(* Coursera Programming Languages, Homework 3, Provided Code *)
+
+exception NoAnswer
+
+datatype pattern = Wildcard
+		 | Variable of string
+		 | UnitP
+		 | ConstP of int
+		 | TupleP of pattern list
+		 | ConstructorP of string * pattern
+
+datatype valu = Const of int
+	      | Unit
+	      | Tuple of valu list
+	      | Constructor of string * valu
+
+fun g f1 f2 p =
+    let 
+	val r = g f1 f2 
+    in
+	case p of
+	    Wildcard          => f1 ()
+	  | Variable x        => f2 x
+	  | TupleP ps         => List.foldl (fn (p,i) => (r p) + i) 0 ps
+	  | ConstructorP(_,p) => r p
+	  | _                 => 0
+    end
+
+(**** for the challenge problem only ****)
+
+datatype typ = Anything
+	     | UnitT
+	     | IntT
+	     | TupleT of typ list
+	     | Datatype of string
+
+(**** you can put all your code here ****)
+
+(* string list -> string list *)
+(* filters non capital strings out *)
+fun only_capitals string_list=
+    List.filter (fn string => Char.isUpper(String.sub(string, 0))) (string_list)
+
+(* string list -> string *)
+(* gets longest string and will pick word closest to begining of the list *)
+fun longest_string1 string_list=
+    let
+	fun compare (first, second)=
+	    if(String.size first > String.size second)then
+		first
+	    else
+		second
+    in
+	List.foldl compare "" string_list
+    end
+
+(* string list -> string *)
+(* gets longest string and will pick word closest to end of the list *)
+fun longest_string2 string_list=
+    let
+	fun compare (first, second)=
+	    if(String.size first >= String.size second)then
+		first
+	    else
+		second
+    in
+	List.foldl compare "" string_list
+    end
+	
+(* helper for getting longest_string *)
+(* (int * int -> bool) -> string list -> string *)
+fun longest_string_helper f string_list =
+    let
+	fun compare (first, second)=
+	    if(f(String.size(first), String.size(second)))then
+		first
+	    else
+		second
+    in
+	List.foldl compare "" string_list
+    end
+
+val longest_string3 = longest_string_helper (fn (a,b) => a > b)
+val longest_string4 = longest_string_helper (fn (a,b) => a >= b)
+val longest_capitalized = longest_string3 o only_capitals
+val rev_string = String.implode o List.rev o String.explode
+
+(* (’a -> ’b option) -> ’a list -> ’b *)
+(* returns first answer *)	 
+fun first_answer f list=
+    case list of
+	[] => raise NoAnswer
+      | x::xs' => case f x of
+		     NONE => first_answer f xs'
+		   | SOME(a) => a
+
+(* (’a -> ’b list option) -> ’a list -> ’b list option *)
+(* returns all answers *)
+fun all_answers f list=
+    let
+	fun iterator(acc, list)=
+	    case list of
+		[] => SOME(acc)
+	      | x::xs' => case f x of
+			      NONE => NONE
+			    | SOME(a) => iterator(a @ acc, xs')
+    in
+	iterator([], list)
+    end
+
+
+
+	
+	
